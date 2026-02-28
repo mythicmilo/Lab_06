@@ -13,9 +13,10 @@ public class PizzaGUIFrame extends JFrame
     JScrollPane scroller;
     JButton orderBtn, clearBtn, quitBtn;
 
-    String crustType = "";
-    String[] pizzaSize = {"Small", "Medium", "Large", "Super"};
+    String crustType = "unselected";
+    String[] pizzaSize = {"Select Size", "Small", "Medium", "Large", "Super"};
     double crustSizePrice;
+    double toppingPrice = 1;
     double toppingsTotal = 0;
     double tax = .07;
     boolean hasCheese = false;
@@ -24,6 +25,7 @@ public class PizzaGUIFrame extends JFrame
     boolean hasMushroom = false;
     boolean hasPepper = false;
     boolean hasOlive = false;
+    ButtonGroup crustGroup = new ButtonGroup();
 
     //Layout = gridbaglayout
     public PizzaGUIFrame()
@@ -62,6 +64,9 @@ public class PizzaGUIFrame extends JFrame
         mushroom = new JCheckBox("Mushrooms");
         pepper = new JCheckBox("Bell Peppers");
         olive = new JCheckBox("Olives");
+        crustGroup.add(thinCrust);
+        crustGroup.add(regularCrust);
+        crustGroup.add(deepDishCrust);
 
         ActionListener crustListener = new ActionListener()
         {
@@ -72,15 +77,15 @@ public class PizzaGUIFrame extends JFrame
 
                 if (crust == thinCrust)
                 {
-                    crustType = "Thin";
+                    crustType = "Thin Crust";
                 }
                 else if (crust == regularCrust)
                 {
-                    crustType = "Regular";
+                    crustType = "Regular Crust";
                 }
                 else if (crust == deepDishCrust)
                 {
-                    crustType = "Deep Dish";
+                    crustType = "Deep Dish Crust";
                 }
                 else
                 {
@@ -111,9 +116,13 @@ public class PizzaGUIFrame extends JFrame
                 {
                     crustSizePrice = 16.0;
                 }
-                else
+                else if (selectedSize.equals("Super"))
                 {
                     crustSizePrice = 20.0;
+                }
+                else
+                {
+                    crustSizePrice = 0;
                 }
             }
         };
@@ -196,17 +205,51 @@ public class PizzaGUIFrame extends JFrame
         ctrlPnl = new JPanel();
         orderBtn = new JButton("Order");
         orderBtn.addActionListener((ActionEvent e) -> {
-            //display order in orderTA
-            String endLine = "==================================================";
-            String preTotal = "--------------------------------------------------";
-            checkToppings();
+            if (crustType.equals("unselected"))
+            {
+                JOptionPane.showMessageDialog(null, "You must select a crust.");
+            }
+            else if (crustSizePrice == 0.0)
+            {
+                JOptionPane.showMessageDialog(null, "You must select a size.");
+            }
+            else if (noToppings())
+            {
+                JOptionPane.showMessageDialog(null, "You must choose at least 1 topping.");
+            }
+            else
+            {
+                String selectedSize = (String) size.getSelectedItem();
+                //display order in orderTA
+                String endLine = "=========================================";
+                String preTotal = "-----------------------------------------------------------------";
 
-            orderTA.setText(endLine + "\n%-10s" + crustType + "%2.2f" + crustSizePrice );
+                orderTA.append(endLine + "\n");
+                orderTA.append(selectedSize + ", " + crustType + "\t\t" + crustSizePrice + "\n");
+                checkToppings();
+                double subTotal = crustSizePrice + toppingsTotal;
+                double orderTax = subTotal * tax;
+                String roundTax = String.format("%.2f", orderTax);
+                double orderTotal = subTotal + orderTax;
+                orderTA.append("\n" + "Sub-total" + "\t\t\t" + subTotal + "\n");
+                orderTA.append("Tax" + "\t\t\t" + roundTax + "\n");
+                orderTA.append(preTotal + "\n");
+                orderTA.append("Total" + "\t\t\t" + orderTotal + "\n");
+                orderTA.append(endLine + "\n");
+            }
         });
         clearBtn = new JButton("Clear");
         clearBtn.addActionListener((ActionEvent e) -> {
             //clear orderTA
             orderTA.setText("");
+            crustGroup.clearSelection();
+            size.setSelectedItem(pizzaSize[0]);
+            cheese.setSelected(false);
+            pepperoni.setSelected(false);
+            sausage.setSelected(false);
+            mushroom.setSelected(false);
+            pepper.setSelected(false);
+            olive.setSelected(false);
         });
         quitBtn = new JButton("Quit");
         quitBtn.addActionListener((ActionEvent e) -> {
@@ -228,26 +271,36 @@ public class PizzaGUIFrame extends JFrame
         if (hasCheese)
         {
             toppingsTotal += 1.0;
+            orderTA.append("Cheese" + "\t\t\t" + toppingPrice + "\n");
         }
         if (hasPepperoni)
         {
             toppingsTotal += 1.0;
+            orderTA.append("Pepperoni" + "\t\t\t" + toppingPrice + "\n");
         }
         if (hasSausage)
         {
             toppingsTotal += 1.0;
+            orderTA.append("Sausage" + "\t\t\t" + toppingPrice + "\n");
         }
         if (hasMushroom)
         {
             toppingsTotal += 1.0;
+            orderTA.append("Mushrooms" + "\t\t\t" + toppingPrice + "\n");
         }
         if (hasPepper)
         {
             toppingsTotal += 1.0;
+            orderTA.append("Bell Peppers" + "\t\t\t" + toppingPrice + "\n");
         }
         if (hasOlive)
         {
             toppingsTotal += 1.0;
+            orderTA.append("Olives" + "\t\t\t" + toppingPrice + "\n");
         }
+    }
+    private boolean noToppings()
+    {
+        return !hasCheese && !hasPepperoni && !hasSausage && !hasMushroom && !hasPepper && !hasOlive;
     }
 }
